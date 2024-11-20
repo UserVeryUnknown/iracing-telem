@@ -17,7 +17,7 @@ use encoding::{DecoderTrap, Encoding};
 use std::cmp::Ordering;
 use std::ffi::{c_void, CStr};
 use std::os::raw::c_char;
-use std::sync::Arc;
+use std::rc::Rc;
 use std::time::{Duration, Instant};
 use std::{slice, thread};
 use windows::Win32::Foundation::{
@@ -46,7 +46,7 @@ pub const IRSDK_UNLIMITED_TIME: f64 = 604800.0;
 /// access Sessions that have the telemetry data in then.
 #[derive(Debug)]
 pub struct Client {
-    conn: Option<Arc<Connection>>,
+    conn: Option<Rc<Connection>>,
     // Incremented each time we issue a new session. Allows for session to determine its expired even if
     // iRacing started a new session.
     session_id: i32,
@@ -67,7 +67,7 @@ impl Client {
             None => match Connection::new() {
                 Ok(c) => {
                     let result = c.connected();
-                    self.conn = Some(Arc::new(c));
+                    self.conn = Some(Rc::new(c));
                     result
                 }
                 Err(_) => false,
@@ -169,7 +169,7 @@ pub enum DataUpdateResult {
 #[derive(Debug)]
 pub struct Session {
     session_id: i32,
-    conn: Arc<Connection>,
+    conn: Rc<Connection>,
     last_tick_count: i32,
     data: bytes::BytesMut,
     expired: bool,
@@ -713,6 +713,7 @@ impl<'a> Value<'a> {
     pub fn as_i32s(&self) -> Result<&'a [i32], Error> {
         match *self {
             Value::Ints(f) => Ok(f),
+            Value::Bitfields(f) => Ok(f),
             _ => Err(Error::InvalidType),
         }
     }
@@ -989,7 +990,7 @@ mod tests {
         };
         let mut s = Session {
             session_id: 1,
-            conn: Arc::new(Connection {
+            conn: Rc::new(Connection {
                 file_mapping: HANDLE::default(),
                 shared_mem: ptr::null_mut(),
                 header: ptr::addr_of_mut!(h),
@@ -1091,7 +1092,7 @@ mod tests {
         };
         let mut s = Session {
             session_id: 1,
-            conn: Arc::new(Connection {
+            conn: Rc::new(Connection {
                 file_mapping: HANDLE::default(),
                 shared_mem: ptr::null_mut(),
                 header: ptr::addr_of_mut!(h),
