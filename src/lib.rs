@@ -358,6 +358,17 @@ impl Session {
         let (cow_str, _encoding_used, _had_errors) = WINDOWS_1252.decode(bytes);
         cow_str.into_owned()
     }
+    /// Returns the current Session info string UTF-8 encoded. This is a Yaml formatted string that you'll
+    /// need to parse.
+    ///
+    /// # Safety
+    /// see details on Session
+    pub unsafe fn session_info_utf8(&self) -> String {
+        let conn = self.conn.lock().unwrap();
+        let bytes = conn.session_info();
+
+        String::from_utf8_lossy(bytes).into_owned()
+    }
 
     /// A number of things can be controlled in iRacing remotely via broadcast messages.
     /// This will send the supplied message. There is no way to determine that iRacing has
