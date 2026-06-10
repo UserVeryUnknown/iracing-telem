@@ -290,7 +290,7 @@ impl Session {
     ///
     /// # Safety
     /// see details on Session
-    pub unsafe fn var_value(&self, var: &Var) -> Value {
+    pub unsafe fn var_value<'a>(&'a self, var: &Var) -> Value<'a> {
         assert_eq!(
             var.session_id, self.session_id,
             "programmer error, Var was issued by a different Session"
