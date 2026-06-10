@@ -13,8 +13,7 @@
 //! <https://forums.iracing.com/discussion/62/iracing-sdk>
 use core::fmt;
 use std::sync::{Arc, Mutex};
-use encoding::all::WINDOWS_1252;
-use encoding::{DecoderTrap, Encoding};
+use encoding_rs::WINDOWS_1252;
 use std::cmp::Ordering;
 use std::ffi::{c_void, CStr};
 use std::os::raw::c_char;
@@ -355,8 +354,9 @@ impl Session {
     pub unsafe fn session_info(&self) -> String {
         let conn = self.conn.lock().unwrap();
         let bytes = conn.session_info();
-        // as we're using replace, this should not ever return an error
-        WINDOWS_1252.decode(bytes, DecoderTrap::Replace).unwrap()
+
+        let (cow_str, _encoding_used, _had_errors) = WINDOWS_1252.decode(bytes);
+        cow_str.into_owned()
     }
 
     /// A number of things can be controlled in iRacing remotely via broadcast messages.
